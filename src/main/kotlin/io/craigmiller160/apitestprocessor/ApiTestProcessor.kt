@@ -2,9 +2,14 @@ package io.craigmiller160.apitestprocessor
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.craigmiller160.apitestprocessor.config.ApiConfig
+import io.craigmiller160.apitestprocessor.config.RequestConfig
+import io.craigmiller160.apitestprocessor.config.ResponseConfig
 import io.craigmiller160.apitestprocessor.result.ApiResult
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.springframework.http.HttpMethod
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.MvcResult
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
@@ -20,29 +25,42 @@ class ApiTestProcessor (
     fun call(init: ApiConfig.() -> Unit): ApiResult {
         val apiConfig = ApiConfig()
         apiConfig.init()
-
-        var reqBuilder = when(apiConfig.req.method) {
-            HttpMethod.GET -> MockMvcRequestBuilders.get(apiConfig.req.path)
-            HttpMethod.POST -> MockMvcRequestBuilders.post(apiConfig.req.path)
-            HttpMethod.PUT -> MockMvcRequestBuilders.put(apiConfig.req.path)
-            HttpMethod.DELETE -> MockMvcRequestBuilders.delete(apiConfig.req.path)
-            else -> throw RuntimeException("Invalid HTTP method: ${apiConfig.req.method}")
-        }
-        reqBuilder = reqBuilder.secure(true)
-        if (apiConfig.req.doAuth && authToken != null) {
-            reqBuilder = reqBuilder.header("Authorization", "Bearer $authToken")
-        }
-
-        if (apiConfig.req.body != null) {
-            reqBuilder = reqBuilder.contentType("application/json")
-                    .content(objectMapper.writeValueAsString(apiConfig.req.body))
-        }
+        val reqBuilder = buildRequest(apiConfig.req)
 
         val result = mockMvc.perform(reqBuilder)
                 .andDo(MockMvcResultHandlers.print())
-                .andExpect(MockMvcResultMatchers.status().`is`(apiConfig.res.status))
                 .andReturn()
+
+        validateResponse(apiConfig.res, result)
         return ApiResult(result, objectMapper)
+    }
+
+    private fun validateResponse(responseConfig: ResponseConfig, result: MvcResult) {
+        assertEquals(responseConfig.status, result.response.status, "Incorrect response status")
+        responseConfig.headers.forEach { (key, value) ->
+            assertEquals(value, result.response.getHeader(key), "Incorrect value for header $key")
+        }
+    }
+
+    private fun buildRequest(requestConfig: RequestConfig): MockHttpServletRequestBuilder {
+        var reqBuilder = when(requestConfig.method) {
+            HttpMethod.GET -> MockMvcRequestBuilders.get(requestConfig.path)
+            HttpMethod.POST -> MockMvcRequestBuilders.post(requestConfig.path)
+            HttpMethod.PUT -> MockMvcRequestBuilders.put(requestConfig.path)
+            HttpMethod.DELETE -> MockMvcRequestBuilders.delete(requestConfig.path)
+            else -> throw RuntimeException("Invalid HTTP method: ${requestConfig.method}")
+        }
+        reqBuilder = reqBuilder.secure(true)
+        if (requestConfig.doAuth && authToken != null) {
+            reqBuilder = reqBuilder.header("Authorization", "Bearer $authToken")
+        }
+
+        if (requestConfig.body != null) {
+            reqBuilder = reqBuilder.contentType("application/json")
+                    .content(objectMapper.writeValueAsString(requestConfig.body))
+        }
+
+        return reqBuilder
     }
 
 }
