@@ -15,21 +15,22 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import java.lang.RuntimeException
 import java.util.*
 
-class ApiTestProcessor (
-        private val mockMvc: MockMvc,
-        private val objectMapper: ObjectMapper,
-        private val isSecure: Boolean = false,
-        authInit: AuthConfig.() -> Unit = {}
-) {
+class ApiTestProcessor (init: SetupConfig.() -> Unit) {
+
+    private val setupConfig = SetupConfig()
+    private var objectMapper: ObjectMapper
+    private var mockMvc: MockMvc
+    private var authConfig: AuthConfig
+
+    init {
+        setupConfig.init()
+        objectMapper = setupConfig.objectMapper
+        mockMvc = setupConfig.mockMvc
+        authConfig = setupConfig.authConfig
+    }
 
     companion object {
         private const val AUTH_HEADER = "Authorization"
-    }
-
-    private val authConfig = AuthConfig()
-
-    init {
-        authConfig.authInit()
     }
 
     fun call(init: ApiConfig.() -> Unit): ApiResult {
@@ -60,7 +61,7 @@ class ApiTestProcessor (
             HttpMethod.DELETE -> MockMvcRequestBuilders.delete(requestConfig.path)
             else -> throw RuntimeException("Invalid HTTP method: ${requestConfig.method}")
         }
-        reqBuilder = reqBuilder.secure(isSecure)
+        reqBuilder = reqBuilder.secure(setupConfig.isSecure)
         reqBuilder = handleAuth(requestConfig, reqBuilder)
 
         if (requestConfig.body != null) {
