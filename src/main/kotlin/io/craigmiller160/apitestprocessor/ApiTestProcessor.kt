@@ -1,9 +1,8 @@
 package io.craigmiller160.apitestprocessor
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.craigmiller160.apitestprocessor.config.ApiConfig
-import io.craigmiller160.apitestprocessor.config.RequestConfig
-import io.craigmiller160.apitestprocessor.config.ResponseConfig
+import io.craigmiller160.apitestprocessor.config.*
+import io.craigmiller160.apitestprocessor.exception.BadConfigException
 import io.craigmiller160.apitestprocessor.result.ApiResult
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.springframework.http.HttpMethod
@@ -14,13 +13,24 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import java.lang.RuntimeException
+import java.util.*
 
 class ApiTestProcessor (
         private val mockMvc: MockMvc,
         private val objectMapper: ObjectMapper,
         private val isSecure: Boolean = false,
-        private val authToken: String? = null
+        authInit: AuthConfig.() -> Unit = {}
 ) {
+
+    companion object {
+        private const val AUTH_HEADER = "Authorization"
+    }
+
+    private val authConfig = AuthConfig()
+
+    init {
+        authConfig.authInit()
+    }
 
     fun call(init: ApiConfig.() -> Unit): ApiResult {
         val apiConfig = ApiConfig()
@@ -50,16 +60,34 @@ class ApiTestProcessor (
             HttpMethod.DELETE -> MockMvcRequestBuilders.delete(requestConfig.path)
             else -> throw RuntimeException("Invalid HTTP method: ${requestConfig.method}")
         }
-        reqBuilder = reqBuilder.secure(true)
-        if (requestConfig.doAuth && authToken != null) {
-            reqBuilder = reqBuilder.header("Authorization", "Bearer $authToken")
-        }
+        reqBuilder = reqBuilder.secure(isSecure)
+        reqBuilder = handleAuth(requestConfig, reqBuilder)
 
         if (requestConfig.body != null) {
             reqBuilder = reqBuilder.contentType("application/json")
                     .content(objectMapper.writeValueAsString(requestConfig.body))
         }
 
+        return reqBuilder
+    }
+
+    private fun handleAuth(requestConfig: RequestConfig, reqBuilder: MockHttpServletRequestBuilder): MockHttpServletRequestBuilder {
+        if (requestConfig.doAuth) {
+            return when (authConfig.type) {
+                AuthType.BASIC -> {
+                    val userName = authConfig.userName ?: throw BadConfigException("Missing user name for Basic Auth")
+                    val password = authConfig.password ?: throw BadConfigException("Missing password for Basic Auth")
+                    val authString = "$userName:$password"
+                    val encoded = Base64.getEncoder().encodeToString(authString.toByteArray())
+                    reqBuilder.header(AUTH_HEADER, "Basic $encoded")
+                }
+                AuthType.BEARER -> {
+                    val token = authConfig.bearerToken ?: throw BadConfigException("Missing bearer token for Bearer Auth")
+                    reqBuilder.header(AUTH_HEADER, "Bearer $token")
+                }
+                AuthType.NONE -> reqBuilder
+            }
+        }
         return reqBuilder
     }
 

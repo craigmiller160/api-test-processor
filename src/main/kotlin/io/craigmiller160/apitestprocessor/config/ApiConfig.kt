@@ -1,8 +1,8 @@
 package io.craigmiller160.apitestprocessor.config
 
 class ApiConfig {
-    var req = RequestConfig()
-    var res = ResponseConfig()
+    internal var req = RequestConfig()
+    internal var res = ResponseConfig()
 
     fun request(init: RequestConfig.() -> Unit) {
         val request = RequestConfig()
