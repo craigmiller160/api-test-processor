@@ -80,7 +80,7 @@ class ApiTestProcessor (init: SetupConfig.() -> Unit) {
                     when (body) {
                         is Json -> reqBuilder.contentType("application/json")
                                 .content(objectMapper.writeValueAsString(body.value))
-                        is Form -> reqBuilder.contentType("application/json")
+                        is Form -> reqBuilder.contentType("application/x-www-form-urlencoded")
                                 .content(body.toUrlEncoded())
                         else -> throw BadConfigException("Unsupported Body implementation: ${body.javaClass}")
                     }
