@@ -62,11 +62,14 @@ class ApiTestProcessor (init: SetupConfig.() -> Unit) {
             else -> throw RuntimeException("Invalid HTTP method: ${requestConfig.method}")
         }
         reqBuilder = reqBuilder.secure(setupConfig.isSecure)
+                .contentType(requestConfig.contentType)
         reqBuilder = handleAuth(requestConfig, reqBuilder)
 
-        if (requestConfig.body != null) {
-            reqBuilder = reqBuilder.contentType("application/json")
-                    .content(objectMapper.writeValueAsString(requestConfig.body))
+        val body = requestConfig.body
+        reqBuilder = when (body) {
+            is String -> reqBuilder.content(body)
+            is Any -> reqBuilder.content(objectMapper.writeValueAsString(body))
+            else -> reqBuilder
         }
 
         return reqBuilder
