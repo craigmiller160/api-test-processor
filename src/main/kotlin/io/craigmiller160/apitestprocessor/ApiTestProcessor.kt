@@ -1,6 +1,8 @@
 package io.craigmiller160.apitestprocessor
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.craigmiller160.apitestprocessor.body.Form
+import io.craigmiller160.apitestprocessor.body.Json
 import io.craigmiller160.apitestprocessor.config.*
 import io.craigmiller160.apitestprocessor.exception.BadConfigException
 import io.craigmiller160.apitestprocessor.result.ApiResult
@@ -54,25 +56,36 @@ class ApiTestProcessor (init: SetupConfig.() -> Unit) {
     }
 
     private fun buildRequest(requestConfig: RequestConfig): MockHttpServletRequestBuilder {
-        var reqBuilder = when(requestConfig.method) {
+        var reqBuilder = handleRequest(requestConfig)
+        reqBuilder = reqBuilder.secure(setupConfig.isSecure)
+        reqBuilder = handleAuth(requestConfig, reqBuilder)
+        reqBuilder = handleBody(requestConfig, reqBuilder)
+
+        return reqBuilder
+    }
+
+    private fun handleRequest(requestConfig: RequestConfig): MockHttpServletRequestBuilder {
+        return when(requestConfig.method) {
             HttpMethod.GET -> MockMvcRequestBuilders.get(requestConfig.path)
             HttpMethod.POST -> MockMvcRequestBuilders.post(requestConfig.path)
             HttpMethod.PUT -> MockMvcRequestBuilders.put(requestConfig.path)
             HttpMethod.DELETE -> MockMvcRequestBuilders.delete(requestConfig.path)
-            else -> throw RuntimeException("Invalid HTTP method: ${requestConfig.method}")
+            else -> throw BadConfigException("Invalid HTTP method: ${requestConfig.method}")
         }
-        reqBuilder = reqBuilder.secure(setupConfig.isSecure)
-                .contentType(requestConfig.contentType)
-        reqBuilder = handleAuth(requestConfig, reqBuilder)
+    }
 
-        val body = requestConfig.body
-        reqBuilder = when (body) {
-            is String -> reqBuilder.content(body)
-            is Any -> reqBuilder.content(objectMapper.writeValueAsString(body))
-            else -> reqBuilder
-        }
-
-        return reqBuilder
+    private fun handleBody(requestConfig: RequestConfig, reqBuilder: MockHttpServletRequestBuilder): MockHttpServletRequestBuilder {
+        return requestConfig.body
+                ?.let { body ->
+                    when (body) {
+                        is Json -> reqBuilder.contentType("application/json")
+                                .content(objectMapper.writeValueAsString(body.value))
+                        is Form -> reqBuilder.contentType("application/json")
+                                .content(body.toUrlEncoded())
+                        else -> throw BadConfigException("Unsupported Body implementation: ${body.javaClass}")
+                    }
+                }
+                ?: reqBuilder
     }
 
     private fun handleAuth(requestConfig: RequestConfig, reqBuilder: MockHttpServletRequestBuilder): MockHttpServletRequestBuilder {
