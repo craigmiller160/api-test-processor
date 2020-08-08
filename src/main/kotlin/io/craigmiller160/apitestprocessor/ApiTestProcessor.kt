@@ -89,23 +89,21 @@ class ApiTestProcessor (init: SetupConfig.() -> Unit) {
     }
 
     private fun handleAuth(requestConfig: RequestConfig, reqBuilder: MockHttpServletRequestBuilder): MockHttpServletRequestBuilder {
-        if (requestConfig.doAuth) {
-            return when (authConfig.type) {
-                AuthType.BASIC -> {
-                    val userName = authConfig.userName ?: throw BadConfigException("Missing user name for Basic Auth")
-                    val password = authConfig.password ?: throw BadConfigException("Missing password for Basic Auth")
-                    val authString = "$userName:$password"
-                    val encoded = Base64.getEncoder().encodeToString(authString.toByteArray())
-                    reqBuilder.header(AUTH_HEADER, "Basic $encoded")
-                }
-                AuthType.BEARER -> {
-                    val token = authConfig.bearerToken ?: throw BadConfigException("Missing bearer token for Bearer Auth")
-                    reqBuilder.header(AUTH_HEADER, "Bearer $token")
-                }
-                AuthType.NONE -> reqBuilder
+        val auth = requestConfig.overrideAuth ?: authConfig
+        return when (auth.type) {
+            AuthType.BASIC -> {
+                val userName = auth.userName ?: throw BadConfigException("Missing user name for Basic Auth")
+                val password = auth.password ?: throw BadConfigException("Missing password for Basic Auth")
+                val authString = "$userName:$password"
+                val encoded = Base64.getEncoder().encodeToString(authString.toByteArray())
+                reqBuilder.header(AUTH_HEADER, "Basic $encoded")
             }
+            AuthType.BEARER -> {
+                val token = auth.bearerToken ?: throw BadConfigException("Missing bearer token for Bearer Auth")
+                reqBuilder.header(AUTH_HEADER, "Bearer $token")
+            }
+            AuthType.NONE -> reqBuilder
         }
-        return reqBuilder
     }
 
 }

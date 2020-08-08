@@ -7,5 +7,10 @@ class RequestConfig {
     var method: HttpMethod = HttpMethod.GET
     var path: String = ""
     var body: Body? = null
-    var doAuth: Boolean = true
+    internal var overrideAuth: AuthConfig? = null
+
+    fun overrideAuth(init: AuthConfig.() -> Unit) {
+        overrideAuth = AuthConfig()
+        overrideAuth?.init()
+    }
 }
