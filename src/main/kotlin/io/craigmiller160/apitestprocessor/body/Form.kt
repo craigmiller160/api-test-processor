@@ -6,9 +6,9 @@ import java.nio.charset.StandardCharsets
 class Form : HashMap<String,String>(), Body {
     fun toUrlEncoded(): String {
         return this.entries
-                .joinToString("&") { entry ->
-                    val encodedKey = URLEncoder.encode(entry.key, StandardCharsets.UTF_8)
-                    val encodedValue = URLEncoder.encode(entry.value, StandardCharsets.UTF_8)
+                .joinToString("&") { (key, value) ->
+                    val encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8)
+                    val encodedValue = URLEncoder.encode(value, StandardCharsets.UTF_8)
                     "$encodedKey=$encodedValue"
                 }
     }
