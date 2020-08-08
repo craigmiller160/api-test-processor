@@ -40,9 +40,12 @@ class ApiTestProcessor (init: SetupConfig.() -> Unit) {
         apiConfig.init()
         val reqBuilder = buildRequest(apiConfig.req)
 
-        val result = mockMvc.perform(reqBuilder)
-                .andDo(MockMvcResultHandlers.print())
-                .andReturn()
+        var resultActions = mockMvc.perform(reqBuilder)
+        if (apiConfig.res.print) {
+            resultActions = resultActions.andDo(MockMvcResultHandlers.print())
+        }
+
+        val result = resultActions.andReturn()
 
         validateResponse(apiConfig.res, result)
         return ApiResult(result, objectMapper)
