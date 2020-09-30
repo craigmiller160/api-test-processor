@@ -7,6 +7,10 @@ public class JavaApiTestProcessor {
 
     public static JavaApiTestProcessor createProcessor(final Consumer<SetupConfig> setup) {
         final var processor = new ApiTestProcessor(setupConfig -> {
+            setupConfig.auth(config -> {
+                return null;
+            });
+
             if (setup != null) {
                 setup.accept(setupConfig);
             }

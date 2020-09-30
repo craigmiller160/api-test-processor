@@ -3,6 +3,7 @@ package io.craigmiller160.apitestprocessor
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.craigmiller160.apitestprocessor.body.Form
 import io.craigmiller160.apitestprocessor.body.Json
+import io.craigmiller160.apitestprocessor.body.Text
 import io.craigmiller160.apitestprocessor.config.*
 import io.craigmiller160.apitestprocessor.exception.BadConfigException
 import io.craigmiller160.apitestprocessor.result.ApiResult
@@ -85,6 +86,8 @@ class ApiTestProcessor (init: SetupConfig.() -> Unit) {
                                 .content(objectMapper.writeValueAsString(body.value))
                         is Form -> reqBuilder.contentType("application/x-www-form-urlencoded")
                                 .content(body.toUrlEncoded())
+                        is Text -> reqBuilder.content("text/plain")
+                                .content(body.body)
                         else -> throw BadConfigException("Unsupported Body implementation: ${body.javaClass}")
                     }
                 }

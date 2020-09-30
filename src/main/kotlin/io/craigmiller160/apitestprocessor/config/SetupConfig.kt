@@ -10,7 +10,7 @@ class SetupConfig {
 
     internal val authConfig = AuthConfig()
 
-    fun auth(init: AuthConfig.() -> Unit) {
+    fun auth(init: AuthConfig.() -> Nothing) {
         authConfig.init()
     }
 
