@@ -86,7 +86,7 @@ class ApiTestProcessor (init: SetupConfig.() -> Unit) {
                                 .content(objectMapper.writeValueAsString(body.value))
                         is Form -> reqBuilder.contentType("application/x-www-form-urlencoded")
                                 .content(body.toUrlEncoded())
-                        is Text -> reqBuilder.content("text/plain")
+                        is Text -> reqBuilder.contentType("text/plain")
                                 .content(body.body)
                         else -> throw BadConfigException("Unsupported Body implementation: ${body.javaClass}")
                     }
