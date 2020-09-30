@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import java.lang.RuntimeException
 import java.util.*
+import java.util.function.Consumer
 
 class ApiTestProcessor (init: SetupConfig.() -> Unit) {
 
@@ -24,6 +25,8 @@ class ApiTestProcessor (init: SetupConfig.() -> Unit) {
     private var objectMapper: ObjectMapper
     private var mockMvc: MockMvc
     private var authConfig: AuthConfig
+
+    constructor(init: Consumer<SetupConfig>) : this({ init.accept(this) })
 
     init {
         setupConfig.init()
