@@ -1,8 +1,6 @@
 package io.craigmiller160.apitestprocessor;
 
 import io.craigmiller160.apitestprocessor.config.SetupConfig;
-import org.springframework.test.web.servlet.MockMvc;
-
 import java.util.function.Consumer;
 
 public class JavaApiTestProcessor {
@@ -22,7 +20,4 @@ public class JavaApiTestProcessor {
     private JavaApiTestProcessor(final ApiTestProcessor apiTestProcessor) {
         this.apiTestProcessor = apiTestProcessor;
     }
-
-
-
 }
