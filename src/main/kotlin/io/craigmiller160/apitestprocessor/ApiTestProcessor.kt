@@ -39,6 +39,10 @@ class ApiTestProcessor (init: SetupConfig.() -> Unit) {
         private const val AUTH_HEADER = "Authorization"
     }
 
+    fun call(init: Consumer<ApiConfig>): ApiResult {
+        return call { init.accept(this) }
+    }
+
     fun call(init: ApiConfig.() -> Unit): ApiResult {
         val apiConfig = ApiConfig()
         apiConfig.init()
