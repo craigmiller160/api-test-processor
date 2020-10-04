@@ -74,7 +74,7 @@ class ApiTestProcessor (init: SetupConfig.() -> Unit) {
         val result = resultActions.andReturn()
 
         validateResponse(apiConfig.res, result)
-        return ApiResult(result, objectMapper)
+        return ApiResult(result, apiConfig.req, apiConfig.res, objectMapper)
     }
 
     private fun validateResponse(responseConfig: ResponseConfig, result: MvcResult) {

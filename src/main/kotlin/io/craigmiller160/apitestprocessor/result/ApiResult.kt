@@ -19,10 +19,14 @@
 package io.craigmiller160.apitestprocessor.result
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.craigmiller160.apitestprocessor.config.RequestConfig
+import io.craigmiller160.apitestprocessor.config.ResponseConfig
 import org.springframework.test.web.servlet.MvcResult
 
 class ApiResult (
         val mvcResult: MvcResult,
+        val requestConfig: RequestConfig,
+        val responseConfig: ResponseConfig,
         private val objectMapper: ObjectMapper
 ) {
 
