@@ -94,13 +94,17 @@ class ApiTestProcessor (init: SetupConfig.() -> Unit) {
     }
 
     private fun handleRequest(requestConfig: RequestConfig): MockHttpServletRequestBuilder {
-        return when(requestConfig.method) {
+        var builder = when(requestConfig.method) {
             HttpMethod.GET -> MockMvcRequestBuilders.get(requestConfig.path)
             HttpMethod.POST -> MockMvcRequestBuilders.post(requestConfig.path)
             HttpMethod.PUT -> MockMvcRequestBuilders.put(requestConfig.path)
             HttpMethod.DELETE -> MockMvcRequestBuilders.delete(requestConfig.path)
             else -> throw BadConfigException("Invalid HTTP method: ${requestConfig.method}")
         }
+        requestConfig.headers.forEach { entry ->
+            builder = builder.header(entry.key, entry.value)
+        }
+        return builder
     }
 
     private fun handleBody(requestConfig: RequestConfig, reqBuilder: MockHttpServletRequestBuilder): MockHttpServletRequestBuilder {

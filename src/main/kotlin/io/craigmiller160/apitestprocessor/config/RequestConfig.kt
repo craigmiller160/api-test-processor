@@ -26,6 +26,7 @@ class RequestConfig {
     var method: HttpMethod = HttpMethod.GET
     var path: String = ""
     var body: Body? = null
+    var headers: Map<String,String> = mapOf()
     internal var overrideAuth: AuthConfig? = null
 
     fun overrideAuth(init: Consumer<AuthConfig>) {
