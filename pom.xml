@@ -10,7 +10,7 @@
     </parent>
     <groupId>io.craigmiller160</groupId>
     <artifactId>api-test-processor</artifactId>
-    <version>1.2.1</version>
+    <version>1.2.2</version>
     <name>api-test-processor</name>
     <description>A library with a special test processor for Spring APIs</description>
 
@@ -23,12 +23,12 @@
         <repository>
             <id>nexus</id>
             <name>Releases</name>
-            <url>http://craigpc:30003/repository/maven-releases</url>
+            <url>https://craigmiller160.ddns.net:30003/repository/maven-releases</url>
         </repository>
         <snapshotRepository>
             <id>nexus</id>
             <name>Snapshot</name>
-            <url>http://craigpc:30003/repository/maven-snapshots</url>
+            <url>https://craigmiller160.ddns.net:30003/repository/maven-snapshots</url>
         </snapshotRepository>
     </distributionManagement>
 
